@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background-color: #6a0dad; /* Purple background */
+      margin: 0;
+      padding: 0;
+    }
+
+    #game-container {
+      width: 400px;
+      margin: 50px auto;
+      background-color: #a88e1b;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      color: #ffffff; /* White text for better visibility */
+      font-size: 36px;
+    }
+
+    #mode-selection button {
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #8f7a66;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #mode-selection button:hover {
+      background-color: #9c8676;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-top: 20px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #cdc1b4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .cell.taken {
+      cursor: not-allowed;
+      color: #000000;
+    }
+
+    #game-status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #000000;
+    }
+
+    #restart-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #8f7a66;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #restart-button:hover {
+      background-color: #9c8676;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1>Tic Tac Toe</h1>
+    <div id="mode-selection">
+      <button id="pvp-button">Player vs Player</button>
+      <button id="pvc-button">Player vs Computer</button>
+    </div>
+    <div id="game-board"></div>
+    <p id="game-status"></p>
+    <button id="restart-button" style="display: none;">Restart Game</button>
+  </div>
+  <script>
+    let board = Array(9).fill(null);
+    let currentPlayer = "X";
+    let gameMode = ""; // 'pvp' or 'pvc'
+    let gameOver = false;
+
+    const gameBoard = document.getElementById("game-board");
+    const gameStatus = document.getElementById("game-status");
+    const restartButton = document.getElementById("restart-button");
+
+    // Initialize the game board
+    function initializeBoard() {
+      gameBoard.innerHTML = "";
+      board = Array(9).fill(null);
+      currentPlayer = "X";
+      gameOver = false;
+      gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+      restartButton.style.display = "none";
+      board.forEach((_, index) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.dataset.index = index;
+        cell.addEventListener("click", () => handleMove(index));
+        gameBoard.appendChild(cell);
+      });
+    }
+
+    // Handle a player's move
+    function handleMove(index) {
+      if (gameOver || board[index]) return;
+
+      board[index] = currentPlayer;
+      updateBoard();
+
+      if (checkWinner(currentPlayer)) {
+        gameStatus.textContent = `Player ${currentPlayer} Wins!`;
+        gameOver = true;
+        restartButton.style.display = "block";
+        return;
+      } else if (board.every(cell => cell)) {
+        gameStatus.textContent = "It's a Draw!";
+        gameOver = true;
+        restartButton.style.display = "block";
+        return;
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+
+      if (gameMode === "pvc" && currentPlayer === "O") {
+        computerMove();
+      } else {
+        gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
+      }
+    }
+
+    // Update the board display
+    function updateBoard() {
+      const cells = document.querySelectorAll(".cell");
+      cells.forEach((cell, index) => {
+        cell.textContent = board[index];
+        if (board[index]) cell.classList.add("taken");
+      });
+    }
+
+    // Computer makes a random move
+    function computerMove() {
+      setTimeout(() => {
+        let availableMoves = board.map((value, index) => (value === null ? index : null)).filter(index => index !== null);
+        let randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        handleMove(randomMove);
+      }, 500); // Delay for realism
+    }
+
+    // Check if a player has won
+    function checkWinner(player) {
+      const winningCombinations = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      return winningCombinations.some(combination => {
+        return combination.every(index => board[index] === player);
+      });
+    }
+
+    // Start the game in the selected mode
+    function startGame(mode) {
+      gameMode = mode;
+      initializeBoard();
+    }
+
+    // Event Listeners
+    document.getElementById("pvp-button").addEventListener("click", () => startGame("pvp"));
+    document.getElementById("pvc-button").addEventListener("click", () => startGame("pvc"));
+    restartButton.addEventListener("click", initializeBoard);
+
+    // Initial Setup
+    initializeBoard();
+  </script>
+</body>
+</html>

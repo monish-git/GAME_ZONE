@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #000000;
+        }
+
+        h1 {
+            color: #ffffff;
+        }
+
+        #sudoku {
+            display: grid;
+            grid-template-columns: repeat(9, 50px);
+            grid-template-rows: repeat(9, 50px);
+            gap: 5px;
+            background-color: #444;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #sudoku input {
+            width: 45px;
+            height: 45px;
+            text-align: center;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        #sudoku input[readonly] {
+            background-color: #d6e4ff;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sudoku Game</h1>
+<div id="sudoku"></div>
+<div class="controls">
+    <button onclick="checkSolution()">Check Solution</button>
+    <button onclick="solveSudoku()">Solve Puzzle</button>
+    <button onclick="resetGrid()">Reset</button>
+</div>
+<div id="message"></div>
+
+<script>
+    const initialGrid = [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9]
+    ];
+
+    const grid = [];
+
+    function generateGrid() {
+        const sudokuContainer = document.getElementById('sudoku');
+        sudokuContainer.innerHTML = '';
+        for (let row = 0; row < 9; row++) {
+            grid[row] = [];
+            for (let col = 0; col < 9; col++) {
+                const cell = document.createElement('input');
+                cell.type = 'text';
+                cell.maxLength = 1;
+                if (initialGrid[row][col] !== 0) {
+                    cell.value = initialGrid[row][col];
+                    cell.readOnly = true;
+                }
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.addEventListener('input', handleInput);
+                sudokuContainer.appendChild(cell);
+                grid[row].push(cell);
+            }
+        }
+    }
+
+    function handleInput(event) {
+        const cell = event.target;
+        const value = parseInt(cell.value);
+        if (isNaN(value) || value < 1 || value > 9) {
+            cell.value = '';
+        }
+    }
+
+    function checkSolution() {
+        const isValid = validateSudoku();
+        const message = document.getElementById('message');
+        if (isValid) {
+            message.textContent = 'Congratulations! The puzzle is solved correctly.';
+            message.style.color = 'green';
+        } else {
+            message.textContent = 'The solution is incorrect. Try again!';
+            message.style.color = 'red';
+        }
+    }
+
+    function validateSudoku() {
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const value = parseInt(grid[row][col].value);
+                if (isNaN(value) || value < 1 || value > 9) {
+                    return false;
+                }
+                if (!isValidPlacement(row, col, value)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function isValidPlacement(row, col, num) {
+        for (let i = 0; i < 9; i++) {
+            if (i !== col && parseInt(grid[row][i].value) === num) return false;
+            if (i !== row && parseInt(grid[i][col].value) === num) return false;
+        }
+
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let i = startRow; i < startRow + 3; i++) {
+            for (let j = startCol; j < startCol + 3; j++) {
+                if ((i !== row || j !== col) && parseInt(grid[i][j].value) === num) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function solveSudoku() {
+        if (solve(0, 0)) {
+            const message = document.getElementById('message');
+            message.textContent = 'Puzzle solved!';
+            message.style.color = 'green';
+        } else {
+            alert('No solution exists for the given puzzle.');
+        }
+    }
+
+    function solve(row, col) {
+        if (row === 9) return true;
+        if (col === 9) return solve(row + 1, 0);
+        if (initialGrid[row][col] !== 0) return solve(row, col + 1);
+
+        for (let num = 1; num <= 9; num++) {
+            if (isValidPlacement(row, col, num)) {
+                grid[row][col].value = num;
+                if (solve(row, col + 1)) return true;
+                grid[row][col].value = '';
+            }
+        }
+        return false;
+    }
+
+    function resetGrid() {
+        generateGrid();
+        document.getElementById('message').textContent = '';
+    }
+
+    generateGrid();
+</script>
+
+</body>
+</html>

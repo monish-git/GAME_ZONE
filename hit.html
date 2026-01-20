@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hit The Island</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1e3c72, #000000);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+            border: 10px solid #853612;
+        }
+        #scoreboard {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            flex-direction: column;
+        }
+        #overlay button, #pauseButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #pauseButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="scoreboard">Score: 0</div>
+    <div id="overlay" style="display: flex;">
+        <div id="gameMessage">Welcome to Hit The Island!</div>
+        <button id="startButton">Start Game</button>
+    </div>
+    <button id="pauseButton">Pause Game</button>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        // Get canvas and set up drawing context
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Set canvas size
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // Define game objects
+        const paddle = { width: 120, height: 20, x: canvas.width / 2 - 60, y: canvas.height - 30, dx: 10 };
+        const ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 10, dx: 6, dy: 6 };
+        const island = { width: 150, height: 30, x: canvas.width / 2 - 75, y: 50 };
+
+        let score = 0, isPaused = true, gameOver = false, gameStarted = false;
+        let rightPressed = false, leftPressed = false;
+
+        // Handle keyboard events for paddle movement
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowRight") rightPressed = true;
+            if (e.key === "ArrowLeft") leftPressed = true;
+        });
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowRight") rightPressed = false;
+            if (e.key === "ArrowLeft") leftPressed = false;
+        });
+
+        // Pause/Resume button functionality
+        document.getElementById("pauseButton").addEventListener("click", () => {
+            if (gameOver || !gameStarted) return;
+            isPaused = !isPaused;
+            document.getElementById("pauseButton").textContent = isPaused ? "Resume Game" : "Pause Game";
+        });
+
+        // Start/Restart game button functionality
+        document.getElementById("startButton").addEventListener("click", () => {
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("pauseButton").style.display = "block";
+            gameStarted = true;
+            isPaused = false;
+            restartGame();
+            gameLoop();
+        });
+
+        // Function to draw the paddle
+        function drawPaddle() {
+            ctx.fillStyle = "#00ff00";
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        }
+
+        // Function to draw the ball
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = "#ff5722";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // Function to draw the island
+        function drawIsland() {
+            ctx.fillStyle = "#007bff";
+            ctx.fillRect(island.x, island.y, island.width, island.height);
+        }
+
+        // Function to move the paddle
+        function movePaddle() {
+            if (rightPressed && paddle.x + paddle.width < canvas.width) paddle.x += paddle.dx;
+            if (leftPressed && paddle.x > 0) paddle.x -= paddle.dx;
+        }
+
+        // Function to move the ball and handle collisions
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Collision with left and right walls
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+                ball.dx *= -1;
+            }
+
+            // Collision with paddle
+            if (
+                ball.y + ball.radius >= paddle.y && 
+                ball.x >= paddle.x && 
+                ball.x <= paddle.x + paddle.width
+            ) {
+                ball.dy *= -1;
+                ball.y = paddle.y - ball.radius; // Prevent ball from getting stuck inside paddle
+            }
+
+            // Collision with the island
+            if (
+                ball.y - ball.radius <= island.y + island.height &&
+                ball.y > island.y &&  // Ensures it is hitting from below
+                ball.x >= island.x &&
+                ball.x <= island.x + island.width
+            ) {
+                score += 1;
+                updateScore();
+                ball.dy *= -1;
+                ball.y = island.y + island.height + ball.radius; // Prevents ball from going through
+            }
+
+            // Prevent ball from crossing the top boundary
+            if (ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+                ball.y = ball.radius; // Reset ball position
+            }
+
+            // Ball falls off the screen (game over condition)
+            if (ball.y - ball.radius > canvas.height) {
+                endGame();
+            }
+        }
+
+        // Update score display
+        function updateScore() {
+            document.getElementById("scoreboard").textContent = `Score: ${score}`;
+        }
+
+        // Handle game over
+        function endGame() {
+            gameOver = true;
+            isPaused = true;
+            gameStarted = false;
+            setTimeout(() => {
+                document.getElementById("gameMessage").textContent = `Game Over! Final Score: ${score}`;
+                document.getElementById("startButton").textContent = "Restart Game";
+                document.getElementById("overlay").style.display = "flex";
+            }, 500);
+        }
+
+        // Restart the game
+        function restartGame() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = 6;
+            ball.dy = Math.random() < 0.5 ? -6 : 6;
+            paddle.x = canvas.width / 2 - 60;
+            score = 0;
+            updateScore();
+            isPaused = false;
+            gameOver = false;
+        }
+
+        // Main game loop
+        function gameLoop() {
+            if (!isPaused) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPaddle();
+                drawBall();
+                drawIsland();
+                movePaddle();
+                moveBall();
+            }
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+
+        restartGame(); // Set initial game state
+
+    </script>
+</body>
+</html>

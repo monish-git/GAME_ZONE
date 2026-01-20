@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Games</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+    background-image: url('https://t4.ftcdn.net/jpg/05/18/41/91/360_F_518419158_yXXBww2r5Z3XoutBxRX8KHNZOpPjhC03.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: rgb(255, 0, 0);
+            position: relative;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+
+        .search-bar input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .search-bar button {
+            padding: 8px 15px;
+            background-color: white;
+            color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            justify-items: center;
+        }
+
+        .game-card {
+            width: 150px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: scale(1.05);
+        }
+
+        .game-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+            border-radius: 10px;
+        }
+
+        .game-card a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .game-card h3 {
+            font-size: 14px;
+            margin: 5px 0 0;
+            padding: 5px 0;
+            background-color: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">GameZone</div>
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="Search games...">
+            <button id="search-btn">Search</button>
+        </div>
+    </header>
+    
+    <main>
+        <div class="games-grid">
+            <div class="game-card">
+                <a href="2048.html">
+                    <img src="file:///C:/Users/91955/Documents/project/Games/Images/2048logo.png" alt="2048">
+                    <h3>2048</h3>
+                </a>
+            </div>
+            <div class="game-card">
+                <a href="tic_tac_toe.html">
+                    <img src="c:\Users\91955\Documents\project\Games\Images\tic tac toe logo.jpeg" alt="TIC TAC TOE">
+                    <h3>TIC TAC TOE</h3>
+                </a>
+            </div>
+            <div class="game-card">
+                <a href="sudoku.html">
+                    <img src="file:///C:/Users/91955/Documents/project/Games/Images/sudoku.jpeg" alt="SUDOKU">
+                    <h3>SUDOKU</h3>
+                </a>
+            </div>
+            <div class="game-card">
+                <a href="snake_game.html">
+                    <img src="c:\Users\91955\Documents\project\Games\Images\snake game logo.png" alt="SNAKE GAME">
+                    <h3>SNAKE GAME</h3>
+                </a>
+            </div>
+            <div class="game-card">
+                <a href="hit.html">
+                    <img src="c:\Users\91955\Documents\project\Games\Images\hit the island.png" alt="HIT THE ISLAND">
+                    <h3>HIT THE ISLAND</h3>
+                </a>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.getElementById('search-btn').addEventListener('click', function() {
+            openGame();
+        });
+
+        document.getElementById('search').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                openGame();
+            }
+        });
+
+        function openGame() {
+            const query = document.getElementById('search').value.trim().toLowerCase();
+            const games = document.querySelectorAll('.game-card');
+            let found = false;
+
+            games.forEach(game => {
+                const title = game.querySelector('h3').innerText.toLowerCase();
+                const link = game.querySelector('a').href;
+                if (title.includes(query)) {
+                    found = true;
+                    window.location.href = link;
+                }
+            });
+
+            if (!found && query.length > 0) {
+                alert('Game not found!');
+            }
+        }
+    </script>
+</body>
+</html>
